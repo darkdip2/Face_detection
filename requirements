@@ -1,0 +1,10 @@
+imutils
+opencv-python
+scikit-learn
+xgboost
+numpy
+torch
+torchvision
+heic2png
+tensorflow
+--upgrade setuptools
