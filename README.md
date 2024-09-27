@@ -1,5 +1,5 @@
- - Create dataset of face images.
- - Place the face images in dataset folder.
+ - Fetch dataset of face images of each person in seperate folders in dataset folder.
+ ``` python fetch_images.py```
  - Extract facial embeddings.
 ```python extract_embeddings.py```
  - Train the SVM model

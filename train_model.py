@@ -1,12 +1,14 @@
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import RandomizedSearchCV,train_test_split
+from scipy.stats import randint as sp_randint
+from scipy.stats import uniform as sp_uniform
+from sklearn.metrics import f1_score
 from xgboost import XGBClassifier
 from sklearn.pipeline import Pipeline
 import numpy as np
 import argparse
 import pickle
+import lightgbm as lgb
 
 
 
@@ -22,7 +24,7 @@ labels = le.fit_transform(data["names"])
 # train the model used to accept the 128-d embeddings of the face and
 # then produce the actual face recognition
 print("[INFO] training model...")
-'''
+
 param_distributions = {
     'n_estimators': np.arange(100, 500, 50),
     'max_depth': [3, 5, 10, 20, 50, None],
@@ -34,6 +36,9 @@ param_distributions = {
     'reg_lambda': np.arange(0, 1, .2)
 }
 
+X,y=np.array(data["embeddings"]).reshape(-1,2048),labels
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 0)
+
 xgb_model=XGBClassifier()
 rs=RandomizedSearchCV(estimator=xgb_model, 
                        param_distributions=param_distributions, 
@@ -43,32 +48,32 @@ rs=RandomizedSearchCV(estimator=xgb_model,
 #print(np.array(data["embeddings"]).shape)
 rs.fit(np.array(data["embeddings"]).reshape(-1,2048), labels)
 recognizer=rs.best_estimator_
-print(rs.best_params_)'''
+print(rs.best_params_)
 
-# Define the models
-models = {
-    'SVM': SVC(probability=True),
-    'LR': LogisticRegression(max_iter=1000)
-}
+'''
+param ={'num_leaves': sp_randint(6, 50), 
+             'min_child_samples': sp_randint(100, 500), 
+             'min_child_weight': [1e-5, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4],
+             'subsample': sp_uniform(loc=0.2, scale=0.8), 
+             'colsample_bytree': sp_uniform(loc=0.4, scale=0.6),
+             'reg_alpha': [0, 1e-1, 1, 2, 5, 7, 10, 50, 100],
+             'reg_lambda': [0, 1e-1, 1, 5, 10, 20, 50, 100]}
 
-param_distributions = {
-    'SVM': {
-        'kernel': ['linear', 'rbf', 'poly']
-    },
-    'LR': {
-        'C': [0.1, 1, 10],
-        'max_iter': [100, 500, 1000]
-    }
-}
 
-recognizer=None
-for model in models:
-    rs_model = models[model]
-    rs = RandomizedSearchCV(estimator=rs_model, param_distributions=param_distributions[model], cv=4, n_iter=100, random_state=95, scoring='f1_macro')
-    rs.fit(np.array(data["embeddings"]).reshape(-1,2048), labels)
-    if model=='SVM':recognizer=rs.best_estimator_
-    if model=='LR':recognizer=rs.best_estimator_
-    print(f"Best parameters for {model}: {rs.best_params_}")
+clf = lgb.LGBMClassifier(max_depth=-1, random_state=95, silent=True, metric='None', n_jobs=-1, n_estimators=5000)
+gs = RandomizedSearchCV(
+    estimator=clf, param_distributions=param, 
+    n_iter=32,
+    scoring='roc_auc',
+    cv=3,
+    refit=True,
+    random_state=95,
+    verbose=True)
+gs.fit(X_train, y_train)
+recognizer=gs.best_estimator_
+print(gs.best_params_)'''
+
+print('Test F1 score is '+str(f1_score(y_test,recognizer.predict(X_test),average='weighted')))
 
 
 # write the actual face recognition model to disk
