@@ -11,6 +11,8 @@ import tensorflow as tf
 from torchvision import transforms
 from keras.models import load_model,Model
 from keras.applications.inception_v3 import InceptionV3, preprocess_input
+from keras.applications import VGG16
+from tensorflow.keras.layers import Input
 import torchvision.models as models
 from PIL import Image
 import torch
@@ -40,13 +42,17 @@ def get_vector(image):
 
 
 
-# Using inception v3
+'''
 #base_model = InceptionV3(weights='imagenet')
 #model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
-model = load_model('inceptionv3.h5')
+#model=VGG16(weights='imagenet',include_top=False,input_tensor=Input(shape=(299,299,3)))
+#model.save('inceptionv3.h5')
+#model.save('vgg16.h5')'''
+
+#model = load_model('inceptionv3.h5')
+model=load_model('vgg16.h5')
 #print(model.summary())
 
-#model.save('inceptionv3.h5')
 
 
 transform=transforms.Compose([transforms.Resize((299,299)),

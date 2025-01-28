@@ -2,7 +2,7 @@
  ``` python fetch_images.py```
  - Extract facial embeddings.
 ```python extract_embeddings.py```
- - Train the SVM model
+ - Train the ML image classification model
 ```python train_model.py```
  - Test the model
 ```python recognize_video.py```

@@ -21,7 +21,7 @@ print("[INFO] encoding labels...")
 le = LabelEncoder()
 labels = le.fit_transform(data["names"])
 
-# train the model used to accept the 128-d embeddings of the face and
+# train the model used to accept the embeddings of the face and
 # then produce the actual face recognition
 print("[INFO] training model...")
 
@@ -36,17 +36,17 @@ param_distributions = {
     'reg_lambda': np.arange(0, 1, .2)
 }
 
-X,y=np.array(data["embeddings"]).reshape(-1,2048),labels
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 0)
+X,y=np.array(data["embeddings"]).reshape(np.array(data["embeddings"]).shape[0],-1),labels
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 95)
 
 xgb_model=XGBClassifier()
 rs=RandomizedSearchCV(estimator=xgb_model, 
                        param_distributions=param_distributions, 
-                       cv=4, n_iter=100, random_state=95, 
+                       cv=3, n_iter=135, random_state=95, 
                        scoring='f1_macro')
 
 #print(np.array(data["embeddings"]).shape)
-rs.fit(np.array(data["embeddings"]).reshape(-1,2048), labels)
+rs.fit(X_train,y_train)
 recognizer=rs.best_estimator_
 print(rs.best_params_)
 
