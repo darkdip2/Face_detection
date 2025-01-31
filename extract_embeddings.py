@@ -11,11 +11,12 @@ import tensorflow as tf
 from torchvision import transforms
 from keras.models import load_model,Model
 from keras.applications.inception_v3 import InceptionV3, preprocess_input
-from keras.applications import VGG16
-from tensorflow.keras.layers import Input
 import torchvision.models as models
 from PIL import Image
 import torch
+
+
+
 
 
 '''model = models.resnet50(pretrained=True)  #Using Resnet feature extraction
@@ -42,17 +43,13 @@ def get_vector(image):
 
 
 
-'''
+# Using inception v3
 #base_model = InceptionV3(weights='imagenet')
 #model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
-#model=VGG16(weights='imagenet',include_top=False,input_tensor=Input(shape=(299,299,3)))
-#model.save('inceptionv3.h5')
-#model.save('vgg16.h5')'''
-
-#model = load_model('inceptionv3.h5')
-model=load_model('vgg16.h5')
+model = load_model('inceptionv3.h5')
 #print(model.summary())
 
+#model.save('inceptionv3.h5')
 
 
 transform=transforms.Compose([transforms.Resize((299,299)),
@@ -78,7 +75,7 @@ embedder = cv2.dnn.readNetFromTorch("openface_nn4.small2.v1.t7")
 
 # grab the paths to the input images in our dataset
 print("Quantifying Faces...")
-imagePaths = list(paths.list_images("dataset"))
+imagePaths = list(paths.list_images("train"))
 
 # initialize our lists of extracted facial embeddings and corresponding people names
 knownEmbeddings = []
@@ -134,10 +131,20 @@ for (i, imagePath) in enumerate(imagePaths):
 			#embedder.setInput(faceBlob)
 			#vec = embedder.forward()
 			t_img=transform(Image.fromarray(face))  #, 'RGB'
-			t_img = torch.reshape(t_img, (1, 299, 299, 3))
+			
 			#print(t_img.shape)
 			#t_img=tf.keras.applications.inception_v3.preprocess_input(t_img)
-			vec=model(t_img) 
+
+
+
+
+			t_img = torch.reshape(t_img, (1, 299, 299, 3))
+			vec=model(t_img)
+			
+			embedding=DeepFace.represent(img_path=imagePath,model_name='ArcFace')[0]['embedding']
+			vec=np.array(embedding)
+			
+
 			#print(vec.shape)
 
 		
